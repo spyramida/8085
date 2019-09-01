@@ -1,0 +1,28 @@
+;User press a num 1-7
+;0 exit
+;move the led that much
+
+PRINT:
+	MVI A,7FH	;0111 1111
+	MOV C,A	;Save position
+	STA 3000H	;LED on
+READ_IN:		; Input decimal rutine
+	CALL KIND	; Keyboard input
+	CPI 08H	; is< 7
+	JNC READ_IN	; Wait for valid digit
+	CPI 00H	;If 0, end
+	JZ END
+
+MOVEME:
+	DCR A		;Until A=0
+	MOV B,A	;Save counter
+	CPI 00H	
+	MOV A,C
+	RRC		;Rotate LED right
+	MOV C,A	;Restore Led
+	MOV A,B	;Restore Counter
+	JNZ MOVEME	;Loop!
+	MOV A,C
+	STA 3000H	;Print
+	JMP READ_IN
+END: END

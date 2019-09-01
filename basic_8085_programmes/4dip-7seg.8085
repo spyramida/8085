@@ -1,0 +1,59 @@
+;a) first-4 dip switches, give a number to be displayed at the last-2 7-segment displays
+
+	IN 10H
+	CALL RST_ALL
+	PUSH PSW
+	PUSH B
+	PUSH D 
+	PUSH H 
+	CALL STDM 
+	POP H 
+	POP D
+	POP B 
+	POP PSW
+START:	
+	LDA 2000H
+	ANI 0FH	
+	JMP CONVERT
+	JMP START
+
+CONVERT:
+	MVI M,00H	;If x <10, print 0 as first digit
+	CPI 0AH
+	JC SINGLE
+	MVI M,01H	;If x >10, print 1 as first digit
+	SBI 0AH
+SINGLE:
+	DCX H
+	MOV M,A
+	INX H
+	PUSH PSW
+	PUSH B 
+	PUSH D
+	PUSH H 
+	CALL STDM 
+	POP H 
+	POP D
+	POP B 
+	POP PSW	
+	CALL DCD
+	JMP START
+
+RST_ALL:		; Initializing registers
+	MVI A,00H
+	LXI B,0000H
+	LXI D,0A00H
+	LXI H,0A00H	;6 consecutive memory addresses 10H , to keep display closed 
+	MVI M,10H	
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	RET
+END

@@ -1,0 +1,80 @@
+;pressing 1-9 keyboard numbers.
+;7-segment displays the sum of the last 2 pressed numbers.
+;(dip switch initialize the 1st number "pressed")
+;each sum is moduled by 16
+;if fetch_reg is pressed, display the latest pressed number
+;instead of sum
+;
+
+	IN 10H		 ;stop memory protection
+	CALL RST_ALL
+	PUSH PSW
+	PUSH B
+	PUSH D 
+	PUSH H 		;push/pop necessary
+	CALL STDM 	;putting screen off
+	POP H 
+	POP D
+	POP B 
+	POP PSW
+START:	
+	LDA 2000H		;input (switches)
+	ANI 0FH			;mod 16
+	MOV B,A			;keep in B
+READ_IN:		    ;Read digit
+	CALL KIND		;keyboard input
+	CPI 80H			;* from ********here********, fetching
+	JNZ CONT		;* if A=80H then Z is set, so no jump
+	PUSH D 			;* change A with C
+	MOV D,A			;* 
+	MOV A,C			;* 
+	MOV C,D			;*
+	POP D			;*
+	JMP CONVERT		;*
+CONT:				;* to ********here********
+	CPI 0AH			; compare with 10
+	JNC READ_IN		;if equal or bigger, go back to Read_In
+	MOV C,A
+	ADD B
+	ANI 0FH			;
+	MOV B,C
+CONVERT:
+	MVI M,00H	;If x <10, print 0 as first digit
+	CPI 0AH
+	JC SINGLE
+	MVI M,01H	;If x >10, print 1 as first digit
+	SBI 0AH
+SINGLE:
+	DCX H		;H points to 1st digit (display's leftest).
+	MOV M,A		;H-1 so that A points to 2nd digit
+	INX H
+	PUSH PSW
+	PUSH B 
+	PUSH D
+	PUSH H 
+	CALL STDM 
+	POP H 
+	POP D
+	POP B 
+	POP PSW	
+	CALL DCD
+	JMP READ_IN	
+	
+RST_ALL:		; Initializing registers routine
+	MVI A,00H
+	LXI B,0000H
+	LXI D,0A00H
+	LXI H,0A00H	;6 consecutive memory addresses 10H , to keep display closed
+	MVI M,10H	;
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	RET
+END

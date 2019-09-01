@@ -1,0 +1,75 @@
+	IN 10H
+	CALL RST_ALL
+	MVI C,00H	
+START:
+	CALL KIND	;input from keyboard
+	CPI 85H
+	JZ SWAP
+	CPI 10H	; Checking if decimal
+	JNC START	; Waiting for valid digit
+	ADD C
+	ANI 0FH
+	MOV C,A	;Keep new result
+	MOV M,A
+PRINT:
+	PUSH PSW
+	PUSH B
+	PUSH D
+	PUSH H
+	CALL STDM
+	POP H
+	POP D
+	POP B
+	POP PSW
+	CALL DCD
+	JMP START
+
+SWAP:
+	MOV A,L	;Memory positions are stored
+	CMP E		;in D-E and L-H
+	MVI M,10H	;we delete the entry in curr digit
+	JZ LEFT	;If curr addr = START -> JUMP
+	DCX H		;Else, digit is leftmost
+	DCX H		;so we move 5 places to the right
+	DCX H
+	DCX H
+	DCX H
+	MOV M,C	;Moved!
+	JMP PRINT
+LEFT:			;Start = current, curr digit
+	INX H		;is rightmost, so we move it
+	INX H		;5 places to the left!
+	INX H	
+	INX H	
+	INX H	
+	MOV M,C	;Moved!
+	JMP PRINT
+
+RST_ALL:		; Initializing registers (reseting 7segment)
+	MVI A,00H
+	LXI B,0000H
+	LXI D,0A00H
+	LXI H,0A00H	;Putting in 6 consecutive memory addresses 10H to keep display closed
+	MVI M,10H	;
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	PUSH PSW
+	PUSH B
+	PUSH D
+	PUSH H
+	CALL STDM
+	POP H
+	POP D
+	POP B
+	POP PSW
+	CALL DCD
+	RET
+END

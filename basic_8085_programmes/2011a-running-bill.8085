@@ -1,0 +1,30 @@
+	IN 10H
+START:
+	LXI H,0990H
+	LDA 2000H
+	ANI FCH
+	MVI B,06H
+	RRC
+	RRC
+LOOPP:
+	RRC
+	JC ASSOS
+	JMP MHDEN
+ASSOS:
+	MVI M,1CH
+	INX H ; next memory address
+	JMP CONT
+MHDEN:
+	MVI M,17H
+	INX H ; next memory address
+
+CONT:
+	DCR B
+	JNZ LOOPP
+
+	LXI D,0990H
+	CALL STDM
+	CALL DCD
+	JMP START
+
+END

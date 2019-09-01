@@ -1,0 +1,52 @@
+	IN 10H
+	CALL RST_ALL
+	MVI C,00H	
+START:
+	CALL KIND	; Input keyboard
+	CPI 10H	; Check if decimal digit
+	JNC START	; Wait for valid digit
+	ADD C
+	ANI 0FH
+	MOV C,A	;Keep new result
+	MOV M,A
+PRINT:
+	PUSH PSW
+	PUSH B
+	PUSH D
+	PUSH H
+	CALL STDM
+	POP H
+	POP D
+	POP B
+	POP PSW
+	CALL DCD
+	JMP START
+
+RST_ALL:		;Initializing registers
+	MVI A,00H
+	LXI B,0000H
+	LXI D,0A00H
+	LXI H,0A00H	;6 consecutive memory addresses 10H , to keep display closed
+	MVI M,10H	
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	PUSH PSW
+	PUSH B
+	PUSH D
+	PUSH H
+	CALL STDM
+	POP H
+	POP D
+	POP B
+	POP PSW
+	CALL DCD
+	RET
+END

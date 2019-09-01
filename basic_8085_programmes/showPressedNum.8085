@@ -1,0 +1,31 @@
+;Show the number pressed in the 7-segment
+
+	IN 10H
+READ_IN:		; Recognize the number
+	CALL RST_ALL	; Initializing routine
+	CALL KIND	; Keyboard input
+	CPI 0AH	
+	JNC READ_IN	; Wait for valid digit
+	MOV M,A	; Hold it in the memory address
+	CALL STDM	; output
+	CALL DCD
+	JMP READ_IN
+
+RST_ALL:		; Initializing registers routine
+	MVI A,00H
+	LXI B,0000H
+	LXI D,0A00H
+	LXI H,0A00H	;6 consecutive memory addresses 10H , to keep display closed 
+	MVI M,10H	
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	RET
+END

@@ -1,0 +1,117 @@
+; input 3-LSB dip switches = x
+; input keyboard = y
+; output x+y at leds
+; x*y 7-segment (hex)
+; 
+; pressing Intrpt swap 7-segment display from hex to dec and vice versa
+
+
+
+;;1)Να διαβαζει τα 3 LSB των dip switches και να υπολογιζει το αριθμο
+;χ, ενω απο το πληκρολογιο να διαβαζει τον αριθμο y ανηκει [0...14] 
+;(χωρις το F). Σε καθε πατημα του πληκτρολογιου υπολογιζει το χ+y 
+;και το εμφανιζει στα led. (1 μοναδα)
+;;2)Ταυτοχρονα, να δινεται η απεικονιση του γινομενου χ.y στα δυο 
+;μεσαια 7segment display, σε δεκαεξαδικη μορφη.τελειωνει με F.
+;;3)Σε καθε πατημα του Intrpt, να γινεται εναλλαγη της 16-δικης και
+;της δεκαδικης απεικονισης του γινομενου, στα 7-segment.
+
+;Interrupt stuff
+	LXI D,0000H	;(Initialize counters) D:Interrupts E:Loop counter
+	MVI A,0DH	;Interrupt Mask
+	SIM
+;7-segment stuff
+	IN 10H
+	CALL RST_ALL
+	PUSH PSW
+	PUSH B
+	PUSH D
+	PUSH H
+	CALL STDM
+	POP H
+	POP D
+	POP B
+	POP PSW
+	CALL DCD
+START:
+	LDA 2000H	;Read from dip switches
+	ANI 07H	;0000 0111
+	;RAR
+	MOV B,A	;Keep in B
+READ_IN:		; Input decimal routine
+	CALL KIND	; Keyboard input
+	CPI 0FH	; Is it decimal?
+	JZ END		;If 'F', end
+	JNC READ_IN	; Wait for valid digit
+	MOV C,A	;Keep in C
+PRINT1:
+	ADD B
+	XRI FFH
+	STA 3000H	;LEDS = X + Y
+	MOV A,C
+LOOP_:
+	ADD C
+	DCR B
+	JNZ LOOP_
+	SUB C
+	MOV B,A	;Keep result on B
+PRINT2:
+	ANI F0H	;Keep 4 msb
+	RRC		;move to position
+	RRC
+	RRC
+	RRC
+	MOV M,A	;prepare to print
+	DCX H		;next digit
+	MOV A,B
+	ANI 0FH	;Keep 4 lsb
+	MOV M,A	;prepare to print
+	INX H
+	PUSH PSW
+	PUSH B
+	PUSH D
+	PUSH H
+	CALL STDM
+	POP H
+	POP D
+	POP B
+	POP PSW
+	CALL DCD
+
+	
+
+	JMP START
+
+RST_ALL:		;Initializing registers routine
+	MVI A,00H
+	LXI B,0000H
+	LXI D,0A00H
+	LXI H,0A00H	; 6 consecutive memory addresses 10H , to keep display closed
+	MVI M,10H	
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	INX H
+	MVI M,10H
+	DCX H		;make 3rd digit active one
+	DCX H	
+	RET
+
+INTR_ROUTINE: ;This routine must be at this address. not working :P
+	MOV A,B
+	MVI C,00H
+DEC:	
+	CPI 0AH
+LOOP_2:
+	RIM
+	ANI 20H	;A(AND)0010 0000 to check I6.5
+	JNZ LOOP_2	;Repeat until I6.5 is 0
+	EI
+	RET
+
+END: END
